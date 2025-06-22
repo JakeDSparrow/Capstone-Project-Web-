@@ -207,6 +207,26 @@
       font-size: 12px;
     }
 
+    /* Tablet-specific adjustments */
+    @media (max-width: 1024px) {
+      body {
+        grid-template-columns: 220px 1fr;
+      }
+      
+      .sidebar {
+        padding: 20px 0;
+      }
+      
+      .menu-item {
+        padding: 12px 20px;
+        font-size: 1em;
+      }
+      
+      .main-content {
+        padding: 20px;
+      }
+    }
+
     /* Responsive adjustments */
     @media (max-width: 768px) {
       body {
@@ -387,6 +407,138 @@
     .cancel-button {
       background-color: #f0f0f0;
     }
+
+        /* Enhanced Notification Styles */
+    .notification-item {
+        padding: 15px;
+        margin-bottom: 15px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        cursor: pointer;
+    }
+
+    .notification-item.unread {
+        border-left: 4px solid #6c8e47;
+    }
+
+    .notification-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .emergency-type {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        color: white;
+        font-size: 0.8em;
+    }
+
+    .notification-details {
+        margin: 15px 0;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .detail-row {
+        display: flex;
+        margin-bottom: 8px;
+    }
+
+    .detail-label {
+        font-weight: bold;
+        min-width: 120px;
+        color: #555;
+    }
+
+    .detail-value {
+        flex: 1;
+        color: #333;
+    }
+
+    .notification-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .respond-btn {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .respond-btn:hover {
+        background-color: #c0392b;
+    }
+
+    .respond-btn.responded {
+        background-color: #6c8e47;
+        cursor: default;
+    }
+
+    /* Dispatch Modal Styles */
+    .dispatch-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+    }
+
+    .dispatch-modal-content {
+        background-color: white;
+        padding: 25px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+
+    .dispatch-options {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .dispatch-btn {
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .dispatch-btn.confirm {
+        background-color: #6c8e47;
+        color: white;
+        border: none;
+    }
+
+    .dispatch-btn.cancel {
+        background-color: #f0f0f0;
+        border: 1px solid #ddd;
+    }
   </style>
   <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -401,7 +553,7 @@
     </div>
     <img src="assets/GoRescueLogo.webp" alt="Victoria Rescue Logo" class="logo-small">
     <div class="user-menu">
-      <div class="notification-icon">
+      <div class="notification-icon" id="notification-icon">
         <i class="fas fa-bell"></i>
         <span class="notification-badge">3</span>
       </div>
@@ -530,11 +682,33 @@
   <script src="https://maps.geoapify.com/v1/leaflet-map.js?apiKey=499958bc884b4b8cae36c651db0a3d7d"></script>
 
   <script>
-    let map;
-    let markers = [];
-    let userLocationMarker = null;
+    // Notification data
+    const notifications = [
+      {
+        id: 1,
+        type: 'medical',
+        title: 'Medical Emergency',
+        reporter: 'Juan Dela Cruz',
+        reporterContact: '09123456789',
+        location: 'Near Victoria Municipal Hall',
+        coordinates: [15.5784, 120.6819],
+        details: 'Elderly male experiencing chest pains',
+        timestamp: '10:30 AM',
+        read: false
+      }
+    ];
+
+    // Emergency type definitions
+    const emergencyTypes = {
+      medical: { icon: 'fa-plus-square', color: '#e74c3c', label: 'Medical Assistance', responseTeam: 'Medical Team' },
+      natural: { icon: 'fa-cloud-showers-heavy', color: '#3498db', label: 'Natural Disaster', responseTeam: 'Rescue Team' },
+      accident: { icon: 'fa-car-crash', color: '#f39c12', label: 'Road Accident', responseTeam: 'Accident Response Team' }
+    };
+
+    let unreadCount = notifications.filter(n => !n.read).length;
     let sidebarCollapsed = false;
-    
+    let map;
+
     // Team Organizer Data
     const responders = [
       { id: 1, name: 'John Doe', role: 'Paramedic', status: 'Available' },
@@ -546,164 +720,35 @@
     ];
 
     let teams = {
-      alpha: [1, 2, 3], // IDs of team members
+      alpha: [1, 2, 3],
       bravo: [4, 5]
     };
 
-    let currentlyEditingTeam = null;
-
     function initMap() {
-      // Initialize the map centered on Victoria, Tarlac, Philippines
       const victoriaTarlac = [15.5784, 120.6819];
       map = L.map('map').setView(victoriaTarlac, 14);
-      
-      // Add Geoapify tiles with your API key
-      L.tileLayer('https://maps.geoapify.com/v1/tile/{mapStyle}/{z}/{x}/{y}.png?apiKey={apiKey}', {
+
+      L.tileLayer('https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=499958bc884b4b8cae36c651db0a3d7d', {
         attribution: 'Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a>',
-        apiKey: '499958bc884b4b8cae36c651db0a3d7d',
-        mapStyle: 'osm-bright',
         maxZoom: 20
       }).addTo(map);
-      
-      // Add map controls functionality
-      document.getElementById('zoom-in').addEventListener('click', () => {
-        map.zoomIn();
-      });
-      
-      document.getElementById('zoom-out').addEventListener('click', () => {
-        map.zoomOut();
-      });
-      
-      document.getElementById('locate-me').addEventListener('click', () => {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              const pos = [position.coords.latitude, position.coords.longitude];
-              map.setView(pos, 14);
-              
-              if (userLocationMarker) {
-                userLocationMarker.setLatLng(pos);
-              } else {
-                userLocationMarker = L.marker(pos, {
-                  icon: L.divIcon({
-                    className: 'emergency-marker user',
-                    html: '<i class="fas fa-user"></i>',
-                    iconSize: [24, 24],
-                    iconAnchor: [12, 12],
-                    popupAnchor: [0, -12]
-                  })
-                }).addTo(map)
-                .bindPopup('Your Location');
-              }
-            },
-            () => {
-              alert('Error: The Geolocation service failed or your browser doesn\'t support it.');
-            }
-          );
-        } else {
-          alert('Error: Your browser doesn\'t support geolocation.');
-        }
-      });
-      
-      // Add Victoria, Tarlac specific locations
-      addVictoriaTarlacLocations();
-    }
-    
-    function addVictoriaTarlacLocations() {
-      // Key locations in Victoria, Tarlac
-      const locations = [
-        { 
-          lat: 15.5784, 
-          lng: 120.6819, 
-          title: 'Victoria Municipal Hall', 
-          type: 'government', 
-          icon: 'landmark',
-          contact: '(045) 606-2014'
-        },
-        { 
-          lat: 15.5833, 
-          lng: 120.6833, 
-          title: 'Victoria District Hospital', 
-          type: 'medical', 
-          icon: 'hospital',
-          contact: '(045) 606-2022'
-        },
-        { 
-          lat: 15.5750, 
-          lng: 120.6850, 
-          title: 'Victoria Police Station', 
-          type: 'police', 
-          icon: 'shield-alt',
-          contact: '(045) 606-2011'
-        },
-        { 
-          lat: 15.5770, 
-          lng: 120.6780, 
-          title: 'Victoria Fire Station', 
-          type: 'fire', 
-          icon: 'fire-extinguisher',
-          contact: '(045) 606-2012'
-        }
-      ];
-      
-      locations.forEach(location => {
-        let iconClass = 'emergency-marker ' + location.type;
-        let iconHtml = `<i class="fas fa-${location.icon}"></i>`;
-        
-        const marker = L.marker([location.lat, location.lng], {
-          icon: L.divIcon({
-            className: iconClass,
-            html: iconHtml,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12],
-            popupAnchor: [0, -12]
-          })
-        }).addTo(map)
-        .bindPopup(`
-          <b>${location.title}</b><br>
-          Type: ${location.type.charAt(0).toUpperCase() + location.type.slice(1)}<br>
-          Contact: ${location.contact}
-        `)
-        .on('click', function() {
-          console.log(`${location.title} clicked`);
-        });
-        
-        markers.push(marker);
-      });
     }
 
-    // Toggle sidebar function
     function toggleSidebar() {
       sidebarCollapsed = !sidebarCollapsed;
       document.body.classList.toggle('sidebar-collapsed', sidebarCollapsed);
-      
-      // Update the hamburger icon
-      const menuIcon = document.querySelector('#menu-toggle i');
-      if (sidebarCollapsed) {
-        menuIcon.classList.remove('fa-bars');
-        menuIcon.classList.add('fa-chevron-right');
-      } else {
-        menuIcon.classList.remove('fa-chevron-right');
-        menuIcon.classList.add('fa-bars');
-      }
-      
-      // Trigger map resize after sidebar animation completes
-      setTimeout(() => {
-        if (map) map.invalidateSize();
-      }, 300);
     }
 
-    // Initialize team organizer
     function initializeTeamOrganizer() {
       renderTeamMembers('alpha');
       renderTeamMembers('bravo');
     }
 
-    // Render team members
     function renderTeamMembers(teamId) {
       const container = document.getElementById(`${teamId}-team-members`);
+      if (!container) return;
       container.innerHTML = '';
-      
+
       teams[teamId].forEach(memberId => {
         const responder = responders.find(r => r.id === memberId);
         if (responder) {
@@ -719,123 +764,146 @@
           container.appendChild(memberCard);
         }
       });
-      
-      // Add empty state if no members
+
       if (teams[teamId].length === 0) {
         container.innerHTML = '<p>No team members assigned</p>';
       }
     }
 
-    // Render all responders in the selection grid
-    function renderAllResponders() {
-      const container = document.getElementById('responder-grid');
-      container.innerHTML = '';
-      
-      responders.forEach(responder => {
-        const responderCard = document.createElement('div');
-        responderCard.className = 'responder-card';
-        if (currentlyEditingTeam && teams[currentlyEditingTeam].includes(responder.id)) {
-          responderCard.classList.add('selected');
+    function updateNotificationBadge() {
+      unreadCount = notifications.filter(n => !n.read).length;
+      const badge = document.querySelector('.notification-badge');
+      if (badge) {
+        badge.textContent = unreadCount;
+        badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+      }
+    }
+
+    // Notification Bell Handler
+    document.getElementById('notification-icon').addEventListener('click', function(e) {
+      e.stopPropagation();
+      const notificationsMenuItem = document.querySelectorAll('.menu-item')[1];
+      notificationsMenuItem.click();
+      if (window.innerWidth <= 768 && sidebarCollapsed) {
+        toggleSidebar();
+      }
+    });
+
+    // Menu Handler
+    document.querySelectorAll('.menu-item').forEach((item, index) => {
+      item.addEventListener('click', function() {
+        document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+
+        document.querySelectorAll('.content-view').forEach(view => {
+          view.classList.remove('active');
+          view.style.display = 'none';
+        });
+
+        let activeView;
+        switch(index) {
+          case 0:
+            activeView = document.getElementById('map-view');
+            setTimeout(() => map && map.invalidateSize(), 100);
+            break;
+          case 1:
+            activeView = document.getElementById('notifications-view');
+            renderNotifications();
+            break;
+          case 2:
+            activeView = document.getElementById('report-logs-view');
+            break;
+          case 3:
+            activeView = document.getElementById('team-organizer-view');
+            initializeTeamOrganizer();
+            break;
+          case 4:
+            activeView = document.getElementById('incident-history-view');
+            break;
+          case 5:
+            activeView = document.getElementById('settings-view');
+            break;
+          default:
+            activeView = document.getElementById('map-view');
         }
-        
-        responderCard.innerHTML = `
-          <div style="font-weight: bold;">${responder.name}</div>
-          <div>${responder.role}</div>
-          <small>Status: ${responder.status}</small>
+
+        if (activeView) {
+          activeView.classList.add('active');
+          activeView.style.display = 'block';
+        }
+      });
+    });
+
+    // Notification List Render
+    function renderNotifications() {
+      const container = document.getElementById('notifications-view');
+      container.innerHTML = '<h2>Notifications</h2>';
+
+      if (notifications.length === 0) {
+        container.innerHTML += '<p>No notifications</p>';
+        return;
+      }
+
+      const list = document.createElement('div');
+      notifications.forEach(notification => {
+        const emergencyType = emergencyTypes[notification.type];
+
+        const notificationElement = document.createElement('div');
+        notificationElement.className = `notification-item ${notification.read ? '' : 'unread'}`;
+        notificationElement.innerHTML = `
+          <div class="notification-header">
+            <div class="emergency-type" style="background-color: ${emergencyType.color}">
+              <i class="fas ${emergencyType.icon}"></i>
+              <span>${emergencyType.label}</span>
+            </div>
+            <small>${notification.timestamp}</small>
+          </div>
+          <h3>${notification.title}</h3>
+          <div class="notification-details">
+            <div class="detail-row">
+              <span class="detail-label">Reported by:</span>
+              <span class="detail-value">${notification.reporter} (${notification.reporterContact})</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Location:</span>
+              <span class="detail-value">${notification.location}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Details:</span>
+              <span class="detail-value">${notification.details}</span>
+            </div>
+          </div>
+          <div class="notification-actions">
+            <button class="view-on-map" data-coords='${JSON.stringify(notification.coordinates)}'>
+              <i class="fas fa-map-marker-alt"></i> View on Map
+            </button>
+            <button class="respond-btn" data-id="${notification.id}">
+              <i class="fas fa-ambulance"></i> Respond
+            </button>
+          </div>
         `;
-        
-        responderCard.addEventListener('click', () => {
-          toggleResponderSelection(responder.id);
+
+        notificationElement.addEventListener('click', (e) => {
+          if (!e.target.closest('.notification-actions') && !notification.read) {
+            notification.read = true;
+            updateNotificationBadge();
+            notificationElement.classList.remove('unread');
+          }
         });
-        
-        container.appendChild(responderCard);
+
+        list.appendChild(notificationElement);
       });
+
+      container.appendChild(list);
     }
 
-    // Toggle responder selection
-    function toggleResponderSelection(responderId) {
-      const index = teams[currentlyEditingTeam].indexOf(responderId);
-      if (index === -1) {
-        teams[currentlyEditingTeam].push(responderId);
-      } else {
-        teams[currentlyEditingTeam].splice(index, 1);
-      }
-      renderAllResponders();
-    }
-
-    // Open team editor
-    function openTeamEditor(teamId) {
-      currentlyEditingTeam = teamId;
-      document.getElementById('editor-title').textContent = `Edit ${teamId.charAt(0).toUpperCase() + teamId.slice(1)} Team`;
-      document.getElementById('team-editor-overlay').style.display = 'flex';
-      renderAllResponders();
-    }
-
-    // Close team editor
-    function closeTeamEditor() {
-      document.getElementById('team-editor-overlay').style.display = 'none';
-      currentlyEditingTeam = null;
-    }
-
-    // Save team changes
-    function saveTeamChanges() {
-      if (currentlyEditingTeam) {
-        renderTeamMembers(currentlyEditingTeam);
-        closeTeamEditor();
-      }
-    }
-
-    // Switch between content views
-    function switchView(viewId) {
-      // Hide all views
-      document.querySelectorAll('.content-view').forEach(view => {
-        view.classList.remove('active');
-      });
-      
-      // Show the selected view
-      document.getElementById(viewId).classList.add('active');
-      
-      // If switching to map view, invalidate size
-      if (viewId === 'map-view' && map) {
-        setTimeout(() => map.invalidateSize(), 100);
-      }
-      
-      // If switching to team organizer, initialize it
-      if (viewId === 'team-organizer-view') {
-        initializeTeamOrganizer();
-      }
-    }
-
-    // Initialize the page
-    document.addEventListener('DOMContentLoaded', function() {
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
       initMap();
-      
-      // Set up menu item click handlers
-      document.querySelectorAll('.menu-item').forEach(item => {
-        item.addEventListener('click', function() {
-          // Update active menu item
-          document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
-          this.classList.add('active');
-          
-          // Switch to the corresponding view
-          const viewId = this.getAttribute('data-view');
-          switchView(viewId);
-        });
-      });
-      
-      // Set up sidebar toggle
-      document.getElementById('menu-toggle').addEventListener('click', toggleSidebar);
-      
-      // Set up logout button
-      document.getElementById('logout-btn').addEventListener('click', function() {
-        if(confirm('Are you sure you want to logout?')) {
-          window.location.href = 'index.html';
-        }
-      });
-      
-      // Initialize with map view active
-      switchView('map-view');
+      updateNotificationBadge();
+      renderNotifications();
     });
   </script>
+
 </body>
 </html>
