@@ -708,8 +708,8 @@
     let unreadCount = notifications.filter(n => !n.read).length;
     let sidebarCollapsed = false;
     let map;
+    let currentlyEditingTeam = null;
 
-    // Team Organizer Data
     const responders = [
       { id: 1, name: 'John Doe', role: 'Paramedic', status: 'Available' },
       { id: 2, name: 'Jane Smith', role: 'Firefighter', status: 'Available' },
@@ -720,8 +720,8 @@
     ];
 
     let teams = {
-      alpha: [1, 2, 3],
-      bravo: [4, 5]
+      alpha: [],
+      bravo: []
     };
 
     function initMap() {
@@ -749,16 +749,17 @@
       if (!container) return;
       container.innerHTML = '';
 
-      teams[teamId].forEach(memberId => {
+      teams[teamId].forEach((memberId, index) => {
         const responder = responders.find(r => r.id === memberId);
         if (responder) {
+          const roles = ['Team Leader', 'EMT 1', 'EMT 2', 'Ambulance Driver'];
           const memberCard = document.createElement('div');
           memberCard.className = 'member-card';
           memberCard.innerHTML = `
             <div class="member-avatar">${responder.name.charAt(0)}</div>
             <div>
               <div>${responder.name}</div>
-              <small>${responder.role}</small>
+              <small>${roles[index] || responder.role}</small>
             </div>
           `;
           container.appendChild(memberCard);
@@ -767,6 +768,58 @@
 
       if (teams[teamId].length === 0) {
         container.innerHTML = '<p>No team members assigned</p>';
+      }
+    }
+
+    function renderAllResponders() {
+      const container = document.getElementById('responder-grid');
+      if (!container) return;
+      container.innerHTML = '';
+
+      responders.forEach(responder => {
+        const selected = teams[currentlyEditingTeam] || [];
+        const isSelected = selected.includes(responder.id);
+        const responderCard = document.createElement('div');
+        responderCard.className = 'responder-card';
+        if (isSelected) responderCard.classList.add('selected');
+
+        responderCard.innerHTML = `
+          <div style="font-weight: bold;">${responder.name}</div>
+          <div>${responder.role}</div>
+          <small>Status: ${responder.status}</small>
+        `;
+
+        responderCard.addEventListener('click', () => {
+          const team = teams[currentlyEditingTeam];
+          const index = team.indexOf(responder.id);
+          if (index === -1 && team.length < 4) {
+            team.push(responder.id);
+          } else if (index !== -1) {
+            team.splice(index, 1);
+          }
+          renderAllResponders();
+        });
+
+        container.appendChild(responderCard);
+      });
+    }
+
+    function openTeamEditor(teamId) {
+      currentlyEditingTeam = teamId;
+      document.getElementById('editor-title').textContent = `Edit ${teamId.charAt(0).toUpperCase() + teamId.slice(1)} Team`;
+      document.getElementById('team-editor-overlay').style.display = 'flex';
+      renderAllResponders();
+    }
+
+    function closeTeamEditor() {
+      document.getElementById('team-editor-overlay').style.display = 'none';
+      currentlyEditingTeam = null;
+    }
+
+    function saveTeamChanges() {
+      if (currentlyEditingTeam) {
+        renderTeamMembers(currentlyEditingTeam);
+        closeTeamEditor();
       }
     }
 
@@ -779,7 +832,6 @@
       }
     }
 
-    // Notification Bell Handler
     document.getElementById('notification-icon').addEventListener('click', function(e) {
       e.stopPropagation();
       const notificationsMenuItem = document.querySelectorAll('.menu-item')[1];
@@ -789,7 +841,6 @@
       }
     });
 
-    // Menu Handler
     document.querySelectorAll('.menu-item').forEach((item, index) => {
       item.addEventListener('click', function() {
         document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
@@ -834,7 +885,6 @@
       });
     });
 
-    // Notification List Render
     function renderNotifications() {
       const container = document.getElementById('notifications-view');
       container.innerHTML = '<h2>Notifications</h2>';
@@ -874,7 +924,7 @@
             </div>
           </div>
           <div class="notification-actions">
-            <button class="view-on-map" data-coords='${JSON.stringify(notification.coordinates)}'>
+            <button class="view-on-map" data-coords="${notification.coordinates}">
               <i class="fas fa-map-marker-alt"></i> View on Map
             </button>
             <button class="respond-btn" data-id="${notification.id}">
@@ -897,13 +947,11 @@
       container.appendChild(list);
     }
 
-    // Initialize
     window.addEventListener('DOMContentLoaded', () => {
       initMap();
       updateNotificationBadge();
       renderNotifications();
     });
   </script>
-
 </body>
 </html>
