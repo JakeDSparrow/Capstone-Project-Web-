@@ -539,6 +539,111 @@
         background-color: #f0f0f0;
         border: 1px solid #ddd;
     }
+
+    /* Report Logs Styles */
+    .report-logs-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding: 0 10px;
+    }
+
+    .report-filters {
+        display: flex;
+        gap: 15px;
+    }
+
+    .report-filters select {
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        background-color: white;
+    }
+
+    .report-logs-table {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .table-header {
+        display: grid;
+        grid-template-columns: 1fr 1.5fr 1.5fr 1.5fr 1.5fr 1fr 1fr;
+        padding: 15px;
+        background-color: #2c3e50;
+        color: white;
+        font-weight: bold;
+        gap: 10px;
+    }
+
+    .table-row {
+        display: grid;
+        grid-template-columns: 1fr 1.5fr 1.5fr 1.5fr 1.5fr 1fr 1fr;
+        padding: 12px 15px;
+        border-bottom: 1px solid #eee;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .table-row:last-child {
+        border-bottom: none;
+    }
+
+    .table-row:hover {
+        background-color: #f8f9fa;
+    }
+
+    .col-id {
+        font-family: monospace;
+        font-size: 0.9em;
+    }
+
+    .reporter-name {
+        font-weight: 500;
+    }
+
+    .reporter-contact {
+        font-size: 0.8em;
+        color: #666;
+    }
+
+    .type-badge, .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        color: white;
+        font-size: 0.8em;
+        white-space: nowrap;
+    }
+
+    .view-btn {
+        background-color: #6c8e47;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.8em;
+    }
+
+    .view-btn:hover {
+        background-color: #557534;
+    }
+
+    .no-reports {
+        padding: 30px;
+        text-align: center;
+        color: #666;
+        grid-column: 1 / -1;
+    }
+
   </style>
   <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -557,7 +662,7 @@
         <i class="fas fa-bell"></i>
         <span class="notification-badge">3</span>
       </div>
-      <button id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+      <button id="logout-btn" type="button"><i class="fas fa-sign-out-alt"></i> Logout</button>
     </div>
   </div>
 
@@ -586,10 +691,6 @@
       <div class="menu-item" data-view="incident-history-view">
         <i class="fas fa-history"></i>
         <span>Incident History</span>
-      </div>
-      <div class="menu-item" data-view="settings-view">
-        <i class="fas fa-cog"></i>
-        <span>Settings</span>
       </div>
     </div>
   </div>
@@ -644,15 +745,8 @@
     </div>
 
     <!-- Incident History View -->
-    <div class="content-view" id="incident-history-view">
-      <h2>Incident History</h2>
-      <p>Incident history logs shown here...</p>
-    </div>
-
-    <!-- Settings View -->
-    <div class="content-view" id="settings-view">
-      <h2>Settings</h2>
-      <p>Settings configuration goes here...</p>
+    <div class="content-view" id="incident-history-view" style="display: none;">
+      
     </div>
 
     <!-- Team Editor Overlay -->
@@ -680,8 +774,7 @@
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
   <!-- Geoapify Map API with your API key -->
   <script src="https://maps.geoapify.com/v1/leaflet-map.js?apiKey=499958bc884b4b8cae36c651db0a3d7d"></script>
-
-  <script>
+<script>
     // Notification data
     const notifications = [
       {
@@ -704,6 +797,57 @@
       natural: { icon: 'fa-cloud-showers-heavy', color: '#3498db', label: 'Natural Disaster', responseTeam: 'Rescue Team' },
       accident: { icon: 'fa-car-crash', color: '#f39c12', label: 'Road Accident', responseTeam: 'Accident Response Team' }
     };
+
+     // Emergency type mapping
+    const emergencyTypeMap = {
+        medical: { icon: 'fa-plus-square', color: '#e74c3c', label: 'Medical Emergency' },
+        accident: { icon: 'fa-car-crash', color: '#f39c12', label: 'Road Accident' },
+        natural: { icon: 'fa-water', color: '#2980b9', label: 'Natural Disaster' }
+    };
+
+    // Status mapping
+    const statusMap = {
+        pending: { color: '#f39c12', label: 'Pending' },
+        'in-progress': { color: '#3498db', label: 'In Progress' },
+        completed: { color: '#2ecc71', label: 'Completed' }
+    };
+
+    // Report logs data with corrected team names
+    const reportLogs = [
+        {
+            id: 'RPT-2023-001',
+            reporter: 'Maria Santos',
+            contact: '09123456789',
+            timestamp: '2023-11-15 08:30:45',
+            emergencyType: 'medical',
+            location: 'Victoria Public Market',
+            details: 'Elderly woman collapsed near vegetable section',
+            respondingTeam: 'Team Alpha - Medical',
+            status: 'completed'
+        },
+        {
+            id: 'RPT-2023-002',
+            reporter: 'Barangay Tanod',
+            contact: '09987654321',
+            timestamp: '2023-11-15 09:15:22',
+            emergencyType: 'natural',
+            location: 'Purok 5, San Gavino',
+            details: 'Flash flood in low-lying area',
+            respondingTeam: 'Team Bravo - Rescue',
+            status: 'in-progress'
+        },
+        {
+            id: 'RPT-2023-003',
+            reporter: 'Jeepney Driver',
+            contact: '09112233445',
+            timestamp: '2023-11-15 10:05:33',
+            emergencyType: 'accident',
+            location: 'Victoria-Tarlac Road KM 12',
+            details: 'Motorcycle vs bicycle collision',
+            respondingTeam: 'Team Charlie - Rescue',
+            status: 'pending'
+        }
+    ];
 
     let unreadCount = notifications.filter(n => !n.read).length;
     let sidebarCollapsed = false;
@@ -737,6 +881,23 @@
     function toggleSidebar() {
       sidebarCollapsed = !sidebarCollapsed;
       document.body.classList.toggle('sidebar-collapsed', sidebarCollapsed);
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', function(e) {
+      e.preventDefault();
+      const confirmed = confirm('Are you sure you want to logout?');
+      if (confirmed) {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = 'index.html';
+      }
+    });
+
+    function toggleHamburgerMenu() {
+      const hamburgerMenu = document.getElementById('hamburger-menu');
+      if (hamburgerMenu) {
+        hamburgerMenu.classList.toggle('active');
+      }
     }
 
     function initializeTeamOrganizer() {
@@ -863,6 +1024,7 @@
             break;
           case 2:
             activeView = document.getElementById('report-logs-view');
+            renderReportLogs();
             break;
           case 3:
             activeView = document.getElementById('team-organizer-view');
@@ -947,10 +1109,216 @@
       container.appendChild(list);
     }
 
+  function renderReportLogs() {
+    const container = document.getElementById('report-logs-view');
+    container.innerHTML = `
+      <div class="report-logs-header">
+        <h2>Incident Reports</h2>
+        <div class="report-filters">
+          <select id="emergency-type-filter">
+            <option value="all">All Emergency Types</option>
+            <option value="medical">Medical Emergencies</option>
+            <option value="accident">Road Accidents</option>
+            <option value="natural">Natural Disasters</option>
+          </select>
+          <select id="status-filter">
+            <option value="all">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="in-progress">In Progress</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+      </div>
+      <div class="report-logs-table">
+        <div class="table-header">
+          <div class="col-id">Report ID</div>
+          <div class="col-reporter">Reporter</div>
+          <div class="col-time">Time Reported</div>
+          <div class="col-type">Emergency Type</div>
+          <div class="col-team">Response Team</div>
+          <div class="col-status">Status</div>
+          <div class="col-actions">Actions</div>
+        </div>
+        <div class="table-body" id="report-logs-list"></div>
+      </div>
+    `;
+
+    updateReportLogsList();
+    document.getElementById('emergency-type-filter').addEventListener('change', updateReportLogsList);
+    document.getElementById('status-filter').addEventListener('change', updateReportLogsList);
+  }
+
+  function updateReportLogsList() {
+    const typeFilter = document.getElementById('emergency-type-filter').value;
+    const statusFilter = document.getElementById('status-filter').value;
+
+    const filteredReports = reportLogs.filter(report => {
+      const typeMatch = typeFilter === 'all' || report.emergencyType === typeFilter;
+      const statusMatch = statusFilter === 'all' || report.status === statusFilter;
+      return typeMatch && statusMatch;
+    });
+
+    const listContainer = document.getElementById('report-logs-list');
+    listContainer.innerHTML = '';
+
+    if (filteredReports.length === 0) {
+      listContainer.innerHTML = '<div class="no-reports">No reports match the selected filters</div>';
+      return;
+    }
+
+    filteredReports.forEach(report => {
+      const emergencyType = emergencyTypeMap[report.emergencyType];
+      const status = statusMap[report.status];
+
+      const reportElement = document.createElement('div');
+      reportElement.className = 'table-row';
+      reportElement.innerHTML = `
+        <div class="col-id">${report.id}</div>
+        <div class="col-reporter">
+          <div class="reporter-name">${report.reporter}</div>
+          <div class="reporter-contact">${report.contact}</div>
+        </div>
+        <div class="col-time">${formatDateTime(report.timestamp)}</div>
+        <div class="col-type">
+          <span class="type-badge" style="background-color: ${emergencyType.color}">
+            <i class="fas ${emergencyType.icon}"></i> ${emergencyType.label}
+          </span>
+        </div>
+        <div class="col-team">${report.respondingTeam}</div>
+        <div class="col-status">
+          <span class="status-badge" style="background-color: ${status.color}">
+            ${status.label}
+          </span>
+        </div>
+        <div class="col-actions">
+          <button class="view-btn" data-id="${report.id}">
+            <i class="fas fa-eye"></i> View
+          </button>
+        </div>
+      `;
+      listContainer.appendChild(reportElement);
+    });
+
+    document.querySelectorAll('.view-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const reportId = this.getAttribute('data-id');
+        viewReportDetails(reportId);
+      });
+    });
+  }
+
+    function viewReportDetails(reportId) {
+      const report = reportLogs.find(r => r.id === reportId);
+      if (!report) return;
+
+      const emergencyType = emergencyTypeMap[report.emergencyType];
+      const status = statusMap[report.status];
+
+      const detailsHTML = `
+          <div class="report-details-overlay">
+              <div class="report-details-content">
+                  <div class="report-details-header">
+                      <h3>Incident Report: ${report.id}</h3>
+                      <button class="close-details">&times;</button>
+                  </div>
+                  <div class="report-details-body">
+                      <div class="detail-section">
+                          <h4>Incident Details</h4>
+                          <div class="detail-grid">
+                              <div class="detail-item">
+                                  <span class="detail-label">Emergency Type:</span>
+                                  <span class="detail-value">
+                                      <span class="type-badge" style="background-color: ${emergencyType.color}">
+                                            <i class="fas ${emergencyType.icon}"></i> ${emergencyType.label}
+                                        </span>
+                                    </span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Location:</span>
+                                    <span class="detail-value">${report.location}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Time Reported:</span>
+                                    <span class="detail-value">${formatDateTime(report.timestamp)}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Response Team:</span>
+                                    <span class="detail-value">${report.respondingTeam}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Status:</span>
+                                    <span class="detail-value">
+                                        <span class="status-badge" style="background-color: ${status.color}">
+                                            ${status.label}
+                                        </span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h4>Reporter Information</h4>
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <span class="detail-label">Name:</span>
+                                    <span class="detail-value">${report.reporter}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Contact:</span>
+                                    <span class="detail-value">${report.contact}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h4>Incident Description</h4>
+                            <div class="incident-description">${report.details}</div>
+                        </div>
+                    </div>
+                    <div class="report-details-footer">
+                        <button class="action-btn print-btn">
+                            <i class="fas fa-print"></i> Print Report
+                        </button>
+                        <button class="action-btn close-btn">
+                            <i class="fas fa-times"></i> Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const overlay = document.createElement('div');
+        overlay.innerHTML = detailsHTML;
+        document.body.appendChild(overlay);
+
+        // Add event listeners
+        document.querySelector('.close-details').addEventListener('click', () => {
+            document.body.removeChild(overlay);
+        });
+        
+        document.querySelector('.close-btn').addEventListener('click', () => {
+            document.body.removeChild(overlay);
+        });
+        
+        document.querySelector('.print-btn').addEventListener('click', () => {
+            window.print();
+        });
+    }
+
+    function formatDateTime(datetimeStr) {
+      const date = new Date(datetimeStr);
+      return date.toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' });
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       initMap();
       updateNotificationBadge();
       renderNotifications();
+      renderReportLogs();
+     
+      // Initialize hamburger menu and logout functionality
+      document.getElementById('menu-toggle').addEventListener('click', toggleSidebar);
+      document.getElementById('hamburger-toggle').addEventListener('click', toggleHamburgerMenu);
     });
   </script>
 </body>
