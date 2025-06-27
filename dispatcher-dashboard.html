@@ -644,6 +644,28 @@
         grid-column: 1 / -1;
     }
 
+    /* Emergency marker on map */
+    .emergency-marker {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Team selection overlay */
+    .team-option {
+      transition: all 0.2s ease;
+    }
+
+    .team-option:hover {
+      background-color: #f5f5f5 !important;
+    }
+
+    /* Notification items */
+    .notification-item.responded {
+      opacity: 0.7;
+      border-left: 4px solid #2ecc71;
+    }
+
   </style>
   <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -1214,95 +1236,158 @@
       const emergencyType = emergencyTypeMap[report.emergencyType];
       const status = statusMap[report.status];
 
-      const detailsHTML = `
-          <div class="report-details-overlay">
-              <div class="report-details-content">
-                  <div class="report-details-header">
-                      <h3>Incident Report: ${report.id}</h3>
-                      <button class="close-details">&times;</button>
-                  </div>
-                  <div class="report-details-body">
-                      <div class="detail-section">
-                          <h4>Incident Details</h4>
-                          <div class="detail-grid">
-                              <div class="detail-item">
-                                  <span class="detail-label">Emergency Type:</span>
-                                  <span class="detail-value">
-                                      <span class="type-badge" style="background-color: ${emergencyType.color}">
-                                            <i class="fas ${emergencyType.icon}"></i> ${emergencyType.label}
-                                        </span>
-                                    </span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Location:</span>
-                                    <span class="detail-value">${report.location}</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Time Reported:</span>
-                                    <span class="detail-value">${formatDateTime(report.timestamp)}</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Response Team:</span>
-                                    <span class="detail-value">${report.respondingTeam}</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Status:</span>
-                                    <span class="detail-value">
-                                        <span class="status-badge" style="background-color: ${status.color}">
-                                            ${status.label}
-                                        </span>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="detail-section">
-                            <h4>Reporter Information</h4>
-                            <div class="detail-grid">
-                                <div class="detail-item">
-                                    <span class="detail-label">Name:</span>
-                                    <span class="detail-value">${report.reporter}</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Contact:</span>
-                                    <span class="detail-value">${report.contact}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="detail-section">
-                            <h4>Incident Description</h4>
-                            <div class="incident-description">${report.details}</div>
-                        </div>
-                    </div>
-                    <div class="report-details-footer">
-                        <button class="action-btn print-btn">
-                            <i class="fas fa-print"></i> Print Report
-                        </button>
-                        <button class="action-btn close-btn">
-                            <i class="fas fa-times"></i> Close
-                        </button>
-                    </div>
-                </div>
+      // Create overlay container
+      const overlay = document.createElement('div');
+      overlay.className = 'report-details-overlay';
+      overlay.style.position = 'fixed';
+      overlay.style.top = '0';
+      overlay.style.left = '0';
+      overlay.style.width = '100%';
+      overlay.style.height = '100%';
+      overlay.style.backgroundColor = 'rgba(0,0,0,0.7)';
+      overlay.style.display = 'flex';
+      overlay.style.justifyContent = 'center';
+      overlay.style.alignItems = 'center';
+      overlay.style.zIndex = '1000';
+
+      // Create modal content
+      const modalContent = document.createElement('div');
+      modalContent.className = 'report-details-modal';
+      modalContent.style.backgroundColor = '#fff';
+      modalContent.style.padding = '20px';
+      modalContent.style.borderRadius = '8px';
+      modalContent.style.maxWidth = '800px';
+      modalContent.style.width = '90%';
+      modalContent.style.maxHeight = '90vh';
+      modalContent.style.overflowY = 'auto';
+      modalContent.style.position = 'relative';
+
+      // Modal content HTML
+      modalContent.innerHTML = `
+        <div class="report-details-header">
+          <h3>Incident Report: ${report.id}</h3>
+          <button class="close-details" style="
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+          ">&times;</button>
+        </div>
+        <div class="report-details-body">
+          <div class="detail-section">
+            <h4>Incident Details</h4>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <span class="detail-label">Emergency Type:</span>
+                <span class="detail-value">
+                  <span class="type-badge" style="background-color: ${emergencyType.color}">
+                    <i class="fas ${emergencyType.icon}"></i> ${emergencyType.label}
+                  </span>
+                </span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Location:</span>
+                <span class="detail-value">${report.location}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Time Reported:</span>
+                <span class="detail-value">${formatDateTime(report.timestamp)}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Response Team:</span>
+                <span class="detail-value">${report.respondingTeam}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Status:</span>
+                <span class="detail-value">
+                  <span class="status-badge" style="background-color: ${status.color}">
+                    ${status.label}
+                  </span>
+                </span>
+              </div>
             </div>
-        `;
+          </div>
+          
+          <div class="detail-section">
+            <h4>Reporter Information</h4>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <span class="detail-label">Name:</span>
+                <span class="detail-value">${report.reporter}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Contact:</span>
+                <span class="detail-value">${report.contact}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="detail-section">
+            <h4>Incident Description</h4>
+            <div class="incident-description">${report.details}</div>
+          </div>
+        </div>
+        <div class="report-details-footer" style="margin-top: 20px; text-align: right;">
+          <button class="action-btn print-btn" style="
+            padding: 8px 16px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+          ">
+            <i class="fas fa-print"></i> Print Report
+          </button>
+          <button class="action-btn close-btn" style="
+            padding: 8px 16px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+          ">
+            <i class="fas fa-times"></i> Close
+          </button>
+        </div>
+      `;
 
-        const overlay = document.createElement('div');
-        overlay.innerHTML = detailsHTML;
-        document.body.appendChild(overlay);
+      // Append elements
+      overlay.appendChild(modalContent);
+      document.body.appendChild(overlay);
+      document.body.style.overflow = 'hidden'; // Prevent scrolling behind modal
 
-        // Add event listeners
-        document.querySelector('.close-details').addEventListener('click', () => {
-            document.body.removeChild(overlay);
-        });
-        
-        document.querySelector('.close-btn').addEventListener('click', () => {
-            document.body.removeChild(overlay);
-        });
-        
-        document.querySelector('.print-btn').addEventListener('click', () => {
-            window.print();
-        });
+      // Close functionality - only via buttons
+      const closeModal = () => {
+        document.body.removeChild(overlay);
+        document.body.style.overflow = 'auto';
+      };
+
+      // Event listeners for close buttons
+      modalContent.querySelector('.close-details').addEventListener('click', closeModal);
+      modalContent.querySelector('.close-btn').addEventListener('click', closeModal);
+      
+      // Print functionality
+      modalContent.querySelector('.print-btn').addEventListener('click', () => {
+        window.print();
+      });
+
+      // Prevent closing when clicking inside modal
+      modalContent.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+
+      // Only allow closing via the X or Close buttons
+      overlay.addEventListener('click', (e) => {
+        // Only close if clicking directly on overlay (not modal content)
+        if (e.target === overlay) {
+          // Uncomment this line if you want to allow closing by clicking outside
+          // closeModal();
+        }
+      });
     }
 
     function formatDateTime(datetimeStr) {
@@ -1310,15 +1395,340 @@
       return date.toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' });
     }
 
+    function setupNotificationActions() {
+      document.addEventListener('click', function(e) {
+        // Handle "View on Map" button clicks
+        if (e.target.closest('.view-on-map')) {
+          const coords = e.target.closest('.view-on-map').getAttribute('data-coords');
+          viewNotificationOnMap(coords);
+        }
+        
+        // Handle "Respond" button clicks
+        if (e.target.closest('.respond-btn')) {
+          const notificationId = e.target.closest('.respond-btn').getAttribute('data-id');
+          showTeamSelectionOverlay(notificationId);
+        }
+      });
+    }
+
+    function viewNotificationOnMap(coords) {
+      // Switch to the Live Map tab
+      document.querySelectorAll('.menu-item')[0].click();
+      
+      // Parse coordinates (they should be stored as "[lat,lng]")
+      const [lat, lng] = JSON.parse(coords);
+      
+      // Center map on the location
+      if (map) {
+        map.setView([lat, lng], 16);
+        
+        // Add a marker
+        L.marker([lat, lng], {
+          icon: L.divIcon({
+            html: '<i class="fas fa-exclamation-triangle" style="color: #e74c3c; font-size: 24px;"></i>',
+            className: 'emergency-marker',
+            iconSize: [24, 24]
+          })
+        }).addTo(map).bindPopup('Emergency Location');
+      }
+    }
+
+    // showTeamSelectionOverlay() 
+    function showTeamSelectionOverlay(notificationId) {
+      const notification = notifications.find(n => n.id == notificationId);
+      const emergencyType = emergencyTypes[notification.type];
+
+      // Create overlay
+      const overlay = document.createElement('div');
+      overlay.className = 'response-overlay';
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+      `;
+
+      // Modal content
+      const modal = document.createElement('div');
+      modal.className = 'response-modal';
+      modal.style.cssText = `
+        background: white;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      `;
+
+      modal.innerHTML = `
+        <div class="modal-header" style="position: relative; margin-bottom: 20px;">
+          <h3 style="margin: 0; color: ${emergencyType.color}; display: flex; align-items: center; gap: 10px;">
+            <i class="fas ${emergencyType.icon}"></i>
+            ${notification.title}
+          </h3>
+          <button class="close-modal" style="
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+          ">&times;</button>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <p><strong><i class="fas fa-user"></i> Reported by:</strong> ${notification.reporter} (${notification.reporterContact})</p>
+          <p><strong><i class="fas fa-map-marker-alt"></i> Location:</strong> ${notification.location}</p>
+          <p><strong><i class="fas fa-info-circle"></i> Details:</strong> ${notification.details}</p>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <h4 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 8px;">
+            <i class="fas fa-users"></i> Select Response Team
+          </h4>
+
+          <div style="margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <button class="team-select-btn" data-team="alpha" style="
+                flex: 1;
+                padding: 10px;
+                margin-right: 8px;
+                background: ${teams.alpha.length ? '#e74c3c' : '#95a5a6'};
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: ${teams.alpha.length ? 'pointer' : 'not-allowed'};
+              ">
+                Team Alpha
+              </button>
+              <button class="team-select-btn" data-team="bravo" style="
+                flex: 1;
+                padding: 10px;
+                background: ${teams.bravo.length ? '#3498db' : '#95a5a6'};
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: ${teams.bravo.length ? 'pointer' : 'not-allowed'};
+              ">
+                Team Bravo
+              </button>
+            </div>
+            
+            <div style="font-size: 0.9em; color: #7f8c8d; margin-bottom: 15px;">
+              ${teams.alpha.length ? `${teams.alpha.length} members in Alpha` : 'Alpha team empty'} | 
+              ${teams.bravo.length ? `${teams.bravo.length} members in Bravo` : 'Bravo team empty'}
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button id="all-responders-btn" style="
+              flex: 1;
+              padding: 10px;
+              background: #f39c12;
+              color: white;
+              border: none;
+              border-radius: 5px;
+              cursor: pointer;
+            ">
+              <i class="fas fa-users"></i> All Units
+            </button>
+            
+            <button id="team-maker-btn" style="
+              flex: 1;
+              padding: 10px;
+              background: #2ecc71;
+              color: white;
+              border: none;
+              border-radius: 5px;
+              cursor: pointer;
+            ">
+              <i class="fas fa-user-plus"></i> Team Maker
+            </button>
+          </div>
+        </div>
+
+        <button id="dispatch-btn" style="
+          width: 100%;
+          padding: 12px;
+          background-color: ${emergencyType.color};
+          color: white;
+          border: none;
+          border-radius: 5px;
+          font-weight: bold;
+          cursor: pointer;
+        ">
+          <i class="fas fa-paper-plane"></i> Dispatch Selected
+        </button>
+      `;
+
+      // Initialize
+      let selectedTeam = null;
+
+      // Team selection
+      modal.querySelectorAll('.team-select-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const teamId = this.getAttribute('data-team');
+          if (teams[teamId].length === 0) return;
+          
+          selectedTeam = teamId;
+          modal.querySelectorAll('.team-select-btn').forEach(b => {
+            b.style.boxShadow = 'none';
+            b.style.transform = 'none';
+          });
+          this.style.boxShadow = `0 0 0 2px ${emergencyType.color}`;
+          this.style.transform = 'translateY(-2px)';
+        });
+      });
+
+      // All Responders button
+      modal.querySelector('#all-responders-btn').addEventListener('click', function() {
+        selectedTeam = 'all';
+        modal.querySelectorAll('.team-select-btn').forEach(b => {
+          b.style.boxShadow = 'none';
+          b.style.transform = 'none';
+        });
+        this.style.boxShadow = `0 0 0 2px ${emergencyType.color}`;
+        this.style.transform = 'translateY(-2px)';
+      });
+
+      // Team Maker button - opens your existing team editor
+      modal.querySelector('#team-maker-btn').addEventListener('click', function() {
+        // Close this modal first
+        document.body.removeChild(overlay);
+        // Open your existing team editor
+        openTeamEditor('alpha'); // or whichever team needs editing
+      });
+
+      // Dispatch button
+      modal.querySelector('#dispatch-btn').addEventListener('click', function() {
+        if (!selectedTeam) {
+          alert('Please select a team or action first');
+          return;
+        }
+        
+        if (selectedTeam === 'all') {
+          dispatchAllResponders(notificationId);
+        } else {
+          dispatchTeam(notificationId, selectedTeam);
+        }
+        
+        document.body.removeChild(overlay);
+      });
+
+      // Close button
+      modal.querySelector('.close-modal').addEventListener('click', () => {
+        document.body.removeChild(overlay);
+      });
+    
+
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+      document.body.style.overflow = 'hidden';
+    }
+
+  
+    function dispatchAllResponders(notificationId) {
+      const notification = notifications.find(n => n.id == notificationId);
+      if (!notification) return;
+      
+      // Mark notification as responded
+      notification.responded = true;
+      notification.respondingTeam = 'ALL AVAILABLE UNITS';
+      notification.responseTime = new Date().toLocaleTimeString();
+      
+      // Update UI
+      updateNotificationBadge();
+      
+      // Show confirmation
+      alert(`All available units have been dispatched to ${notification.location}`);
+      
+      // Update report logs
+      reportLogs.push({
+        id: `RPT-${new Date().getFullYear()}-${reportLogs.length + 1}`,
+        reporter: notification.reporter,
+        contact: notification.reporterContact,
+        timestamp: new Date().toISOString(),
+        emergencyType: notification.type,
+        location: notification.location,
+        details: notification.details,
+        respondingTeam: 'ALL AVAILABLE UNITS - FULL DEPLOYMENT',
+        status: 'in-progress'
+      });
+      
+      // Update views
+      if (document.getElementById('notifications-view').style.display === 'block') {
+        renderNotifications();
+      }
+      
+      if (document.getElementById('report-logs-view').style.display === 'block') {
+        renderReportLogs();
+      }
+    }
+
+    function dispatchTeam(notificationId, teamId) {
+      const notification = notifications.find(n => n.id == notificationId);
+      if (!notification) return;
+      
+      // Mark notification as responded
+      notification.responded = true;
+      notification.respondingTeam = `Team ${teamId.charAt(0).toUpperCase() + teamId.slice(1)}`;
+      notification.responseTime = new Date().toLocaleTimeString();
+      
+      // Update UI
+      updateNotificationBadge();
+      
+      // Show confirmation
+      alert(`Team ${teamId.toUpperCase()} has been dispatched to ${notification.location}`);
+      
+      // You would typically send this to your backend here
+      console.log(`Dispatching ${teamId} to`, notification);
+      
+      // Update report logs
+      reportLogs.push({
+        id: `RPT-${new Date().getFullYear()}-${reportLogs.length + 1}`,
+        reporter: notification.reporter,
+        contact: notification.reporterContact,
+        timestamp: new Date().toISOString(),
+        emergencyType: notification.type,
+        location: notification.location,
+        details: notification.details,
+        respondingTeam: `Team ${teamId.charAt(0).toUpperCase() + teamId.slice(1)} - ${emergencyTypes[notification.type].responseTeam}`,
+        status: 'in-progress'
+      });
+      
+      // Update the notifications view
+      if (document.getElementById('notifications-view').style.display === 'block') {
+        renderNotifications();
+      }
+      
+      // Update the report logs view
+      if (document.getElementById('report-logs-view').style.display === 'block') {
+        renderReportLogs();
+      }
+    }
+
+
     window.addEventListener('DOMContentLoaded', () => {
       initMap();
       updateNotificationBadge();
       renderNotifications();
       renderReportLogs();
-     
+      setupNotificationActions();
+
       // Initialize hamburger menu and logout functionality
       document.getElementById('menu-toggle').addEventListener('click', toggleSidebar);
       document.getElementById('hamburger-toggle').addEventListener('click', toggleHamburgerMenu);
+
+
     });
   </script>
 </body>
