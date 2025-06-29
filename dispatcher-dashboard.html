@@ -666,6 +666,109 @@
       border-left: 4px solid #2ecc71;
     }
 
+    /* Notification Item Styles */
+    .notification-item.responded {
+      border-left: 4px solid var(--success);
+      background-color: rgba(46, 204, 113, 0.05);
+    }
+
+    .notification-item.responded .respond-btn {
+      display: none;
+    }
+
+    .responded-badge {
+      padding: 8px 12px;
+      background-color: var(--success);
+      color: white;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.9em;
+    }
+
+    .notification-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .view-on-map {
+      background-color: var(--primary);
+    }
+
+    /* Map Marker Styles */
+    .emergency-marker {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Incident History Styles */
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .history-filters {
+      display: flex;
+      gap: 10px;
+    }
+
+    .history-filters select {
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+
+    .history-table {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .history-table .table-header {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr 1.5fr 1fr;
+      background-color: #303C54;
+      font-weight: bold;
+      padding: 12px 15px;
+    }
+
+    .history-table .table-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr 1.5fr 1fr;
+      padding: 12px 15px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .history-table .table-row:last-child {
+      border-bottom: none;
+    }
+
+    .col-id {
+      font-family: monospace;
+      color: #338dc9;
+    }
+
+    
+    .history-table {
+      font-family: monospace;
+      color: #095d96;
+    }
+
+    .history-table .reporter-contact {
+      font-size: 0.8em;
+      color: #7f8c8d;
+    }
+
+    .history-table .col-resolved {
+      color: #27ae60;
+      font-weight: 500;
+    }
+
   </style>
   <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -796,7 +899,7 @@
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
   <!-- Geoapify Map API with your API key -->
   <script src="https://maps.geoapify.com/v1/leaflet-map.js?apiKey=499958bc884b4b8cae36c651db0a3d7d"></script>
-<script>
+  <script>
     // Notification data
     const notifications = [
       {
@@ -1054,6 +1157,7 @@
             break;
           case 4:
             activeView = document.getElementById('incident-history-view');
+            renderIncidentHistory();
             break;
           case 5:
             activeView = document.getElementById('settings-view');
@@ -1074,16 +1178,19 @@
       container.innerHTML = '<h2>Notifications</h2>';
 
       if (notifications.length === 0) {
-        container.innerHTML += '<p>No notifications</p>';
+        container.innerHTML += '<p class="no-notifications">No active notifications</p>';
         return;
       }
 
       const list = document.createElement('div');
+      list.className = 'notification-list';
+
       notifications.forEach(notification => {
         const emergencyType = emergencyTypes[notification.type];
+        const isResponded = notification.responded;
 
         const notificationElement = document.createElement('div');
-        notificationElement.className = `notification-item ${notification.read ? '' : 'unread'}`;
+        notificationElement.className = `notification-item ${notification.read ? '' : 'unread'} ${isResponded ? 'responded' : ''}`;
         notificationElement.innerHTML = `
           <div class="notification-header">
             <div class="emergency-type" style="background-color: ${emergencyType.color}">
@@ -1111,9 +1218,15 @@
             <button class="view-on-map" data-coords="${notification.coordinates}">
               <i class="fas fa-map-marker-alt"></i> View on Map
             </button>
+            ${!isResponded ? `
             <button class="respond-btn" data-id="${notification.id}">
               <i class="fas fa-ambulance"></i> Respond
             </button>
+            ` : `
+            <div class="responded-badge">
+              <i class="fas fa-check-circle"></i> Responded
+            </div>
+            `}
           </div>
         `;
 
@@ -1415,21 +1528,34 @@
       // Switch to the Live Map tab
       document.querySelectorAll('.menu-item')[0].click();
       
+      // Clear existing emergency markers
+      if (window.emergencyMarker) {
+        map.removeLayer(window.emergencyMarker);
+      }
+
       // Parse coordinates (they should be stored as "[lat,lng]")
       const [lat, lng] = JSON.parse(coords);
       
-      // Center map on the location
+      // Center map on the location with higher zoom
       if (map) {
-        map.setView([lat, lng], 16);
+        map.setView([lat, lng], 18); // Increased zoom level to 18 for better precision
         
-        // Add a marker
-        L.marker([lat, lng], {
+        // Add a more prominent marker
+        window.emergencyMarker = L.marker([lat, lng], {
           icon: L.divIcon({
-            html: '<i class="fas fa-exclamation-triangle" style="color: #e74c3c; font-size: 24px;"></i>',
+            html: '<div style="background-color: #e74c3c; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 16px;"><i class="fas fa-exclamation"></i></div>',
             className: 'emergency-marker',
-            iconSize: [24, 24]
+            iconSize: [30, 30]
           })
-        }).addTo(map).bindPopup('Emergency Location');
+        }).addTo(map).bindPopup('Emergency Location').openPopup();
+        
+        // Add a circle to show precise location
+        L.circle([lat, lng], {
+          color: '#e74c3c',
+          fillColor: '#e74c3c',
+          fillOpacity: 0.2,
+          radius: 20 // 20 meter radius circle
+        }).addTo(map);
       }
     }
 
@@ -1686,12 +1812,6 @@
       // Update UI
       updateNotificationBadge();
       
-      // Show confirmation
-      alert(`Team ${teamId.toUpperCase()} has been dispatched to ${notification.location}`);
-      
-      // You would typically send this to your backend here
-      console.log(`Dispatching ${teamId} to`, notification);
-      
       // Update report logs
       reportLogs.push({
         id: `RPT-${new Date().getFullYear()}-${reportLogs.length + 1}`,
@@ -1705,15 +1825,135 @@
         status: 'in-progress'
       });
       
-      // Update the notifications view
+      // Refresh views
       if (document.getElementById('notifications-view').style.display === 'block') {
         renderNotifications();
       }
       
-      // Update the report logs view
       if (document.getElementById('report-logs-view').style.display === 'block') {
         renderReportLogs();
       }
+    }
+
+    function renderIncidentHistory() {
+      const container = document.getElementById('incident-history-view');
+      container.innerHTML = `
+        <div class="history-header">
+          <h2>Incident History</h2>
+          <div class="history-filters">
+            <select id="history-year-filter">
+              <option value="all">All Years</option>
+              ${getYearOptions()}
+            </select>
+            <select id="history-type-filter">
+              <option value="all">All Types</option>
+              <option value="medical">Medical</option>
+              <option value="accident">Accident</option>
+              <option value="natural">Natural Disaster</option>
+            </select>
+          </div>
+        </div>
+        <div class="history-table">
+          <div class="table-header">
+            <div class="col-id">Report ID</div>
+            <div class="col-reporter">Reporter</div>
+            <div class="col-date">Date</div>
+            <div class="col-type">Type</div>
+            <div class="col-team">Response Team</div>
+            <div class="col-resolved">Resolved On</div>
+          </div>
+          <div class="table-body" id="history-list"></div>
+        </div>
+      `;
+
+      updateIncidentHistoryList();
+
+      // Add event listeners for filters
+      document.getElementById('history-year-filter').addEventListener('change', updateIncidentHistoryList);
+      document.getElementById('history-type-filter').addEventListener('change', updateIncidentHistoryList);
+    }
+
+
+    function getYearOptions() {
+      const years = new Set();
+      reportLogs.forEach(report => {
+        if (report.status === 'completed') {
+          const year = new Date(report.timestamp).getFullYear();
+          years.add(year);
+        }
+      });
+      return Array.from(years)
+        .sort((a, b) => b - a)
+        .map(year => `<option value="${year}">${year}</option>`)
+        .join('');
+    }
+
+    function updateIncidentHistoryList() {
+      const yearFilter = document.getElementById('history-year-filter').value;
+      const typeFilter = document.getElementById('history-type-filter').value;
+
+      const filteredReports = reportLogs.filter(report => {
+        // Only show completed reports
+        if (report.status !== 'completed') return false;
+
+        // Apply year filter
+        if (yearFilter !== 'all') {
+          const reportYear = new Date(report.timestamp).getFullYear();
+          if (reportYear.toString() !== yearFilter) return false;
+        }
+
+        // Apply type filter (no more "fire" handling)
+        if (typeFilter !== 'all' && report.emergencyType !== typeFilter) {
+          return false;
+        }
+
+        return true;
+      }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Newest first
+
+      const listContainer = document.getElementById('history-list');
+      listContainer.innerHTML = '';
+
+      if (filteredReports.length === 0) {
+        listContainer.innerHTML = '<div class="no-reports">No historical incidents match the selected filters</div>';
+        return;
+      }
+
+      filteredReports.forEach(report => {
+        const emergencyType = emergencyTypeMap[report.emergencyType] || {
+          icon: 'fa-question-circle',
+          color: '#7f8c8d',
+          label: 'Unknown'
+        };
+
+        // Estimate resolution time (fallback to +2hrs)
+        const resolvedTime = report.resolvedTime ||
+          new Date(new Date(report.timestamp).getTime() + 2 * 60 * 60 * 1000);
+
+        const reportElement = document.createElement('div');
+        reportElement.className = 'table-row';
+        reportElement.innerHTML = `
+          <div class="col-id">${report.id}</div>
+          <div class="col-reporter">
+            <div class="reporter-name">${report.reporter}</div>
+            ${report.contact ? `<div class="reporter-contact">${report.contact}</div>` : ''}
+          </div>
+          <div class="col-date">${formatDate(report.timestamp)}</div>
+          <div class="col-type">
+            <span class="type-badge" style="background-color: ${emergencyType.color}">
+              <i class="fas ${emergencyType.icon}"></i> ${emergencyType.label}
+            </span>
+          </div>
+          <div class="col-team">${report.respondingTeam}</div>
+          <div class="col-resolved">${formatDateTime(resolvedTime)}</div>
+        `;
+        listContainer.appendChild(reportElement);
+      });
+    }
+
+
+    function formatDate(dateString) {
+      const options = { year: 'numeric', month: 'short', day: 'numeric' };
+      return new Date(dateString).toLocaleDateString('en-US', options);
     }
 
 
@@ -1723,11 +1963,11 @@
       renderNotifications();
       renderReportLogs();
       setupNotificationActions();
+      renderIncidentHistory();
 
       // Initialize hamburger menu and logout functionality
       document.getElementById('menu-toggle').addEventListener('click', toggleSidebar);
       document.getElementById('hamburger-toggle').addEventListener('click', toggleHamburgerMenu);
-
 
     });
   </script>
