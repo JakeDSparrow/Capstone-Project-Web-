@@ -1018,13 +1018,6 @@
       }
     });
 
-    function toggleHamburgerMenu() {
-      const hamburgerMenu = document.getElementById('hamburger-menu');
-      if (hamburgerMenu) {
-        hamburgerMenu.classList.toggle('active');
-      }
-    }
-
     function initializeTeamOrganizer() {
       renderTeamMembers('alpha');
       renderTeamMembers('bravo');
@@ -1967,8 +1960,6 @@
 
       // Initialize hamburger menu and logout functionality
       document.getElementById('menu-toggle').addEventListener('click', toggleSidebar);
-      document.getElementById('hamburger-toggle').addEventListener('click', toggleHamburgerMenu);
-
     });
   </script>
 </body>
