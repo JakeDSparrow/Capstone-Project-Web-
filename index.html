@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Victoria Rescue Login</title>
+  <title>GoRescue Login</title>
   <style>
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
-      font-family: Arial, sans-serif;
-      background-color: #ffffff;
-      margin: 0;
-      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
       height: 100vh;
       display: flex;
       justify-content: center;
@@ -22,12 +22,14 @@
 
     .container {
       display: flex;
-      width: 80%;
+      width: 90%;
       max-width: 1000px;
-      height: 70%;
-      border-radius: 10px;
-      box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+      height: 80vh;
+      max-height: 700px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
       background: #ffffff;
+      overflow: hidden;
     }
 
     .logo-section {
@@ -35,59 +37,102 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      border-right: 1px solid #eee;
-      padding: 20px;
+      background-color: #27ae60; /* Updated to green */
+      padding: 40px;
     }
 
     .logo-section img {
-      width: 80%;
-      max-width: 300px;
+      width: 100%;
+      max-width: 350px;
+      /* Removed filter to show original logo colors */
     }
 
     .login-section {
       flex: 1;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
+      padding: 40px;
+      position: relative;
+    }
+
+    .login-title {
+      font-size: 28px;
+      color: #2c3e50;
+      margin-bottom: 30px;
+      font-weight: 600;
     }
 
     .login-box {
-      width: 80%;
-      max-width: 300px;
-      display: flex;
-      flex-direction: column;
+      width: 100%;
+      max-width: 350px;
     }
 
-    .login-box input {
-      padding: 12px;
-      margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 1em;
+    .input-group {
+      margin-bottom: 20px;
     }
 
-    .login-box label {
-      font-size: 0.9em;
+    .input-group input {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #ecf0f1;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+
+    .input-group input:focus {
+      border-color: #27ae60; /* Updated to green */
+      outline: none;
+    }
+
+    .remember-me {
       display: flex;
       align-items: center;
-      gap: 5px;
-      margin: 10px 0;
+      margin: 20px 0;
+      color: #7f8c8d;
     }
 
-    .login-box button {
-      padding: 12px;
-      background-color: #6c8e47;
+    .remember-me input {
+      margin-right: 10px;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 15px;
+      background-color: #27ae60; /* Updated to green */
       color: white;
       border: none;
-      border-radius: 5px;
-      font-weight: bold;
-      font-size: 1em;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
       cursor: pointer;
-      margin-top: 10px;
+      transition: background-color 0.3s;
     }
 
-    .login-box button:hover {
-      background-color: #557534;
+    .login-btn:hover {
+      background-color: #2ecc71; /* Lighter green */
+    }
+
+    .login-btn:disabled {
+      background-color: #95a5a6;
+      cursor: not-allowed;
+    }
+
+    .error-message {
+      color: #e74c3c;
+      margin-top: 15px;
+      text-align: center;
+      font-size: 14px;
+      display: none;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      margin-top: 15px;
+      color: #7f8c8d;
     }
 
     @media (max-width: 768px) {
@@ -96,11 +141,17 @@
         height: auto;
       }
 
-      .logo-section,
+      .logo-section {
+        padding: 30px;
+        background-color: #27ae60; /* Consistent green */
+      }
+
+      .logo-section img {
+        max-width: 250px;
+      }
+
       .login-section {
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid #eee;
+        padding: 30px;
       }
     }
   </style>
@@ -108,32 +159,146 @@
 <body>
   <div class="container">
     <div class="logo-section">
-      <img src="assets/GoRescueLogo.webp" alt="Victoria Rescue Logo" />
+      <!-- Make sure the logo path is correct -->
+      <img src="assets/GoRescueLogo.webp" alt="GoRescue Logo" />
     </div>
     <div class="login-section">
-      <div class="login-box">
-        <input type="text" placeholder="Username" id="username" />
-        <input type="password" placeholder="Password" id="password" />
-        <label>
-          <input type="checkbox" id="remember" /> Remember me
-        </label>
-        <button onclick="login()">Login</button>
+      <h1 class="login-title">GoRescue Login</h1>
+      <div class="login-box"> 
+        <div class="input-group">
+          <input type="email" placeholder="Email" id="email" />
+        </div>
+        
+        <div class="input-group">
+          <input type="password" placeholder="Password" id="password" />
+        </div>
+        
+        <div class="remember-me">
+          <input type="checkbox" id="remember" />
+          <label for="remember">Remember me</label>
+        </div>
+        
+        <button id="loginBtn" class="login-btn">Login</button>
+        <div id="errorDisplay" class="error-message"></div>
+        <div id="loadingIndicator" class="loading">Authenticating...</div>
       </div>
     </div>
   </div>
 
-  <script>
-    function login() {
-      const user = document.getElementById('username').value.trim();
-      const pass = document.getElementById('password').value.trim();
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { 
+      getAuth, 
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword, // Added for debugging
+      setPersistence, 
+      browserSessionPersistence, 
+      browserLocalPersistence 
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+    import { 
+      getFirestore,
+      collection,
+      query,
+      where,
+      getDocs,
+      setDoc,
+      doc
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-      if (!user || !pass) {
-          alert("Please enter both username and password.");
-      } else {
-          // In a real app, you would verify credentials with your backend
-          window.location.href = 'dispatcher-dashboard.html';
+    const firebaseConfig = {
+      apiKey: "AIzaSyDCNCYf0jP38sMHx1Oh8sYv_kKNdbVT84s",
+      authDomain: "go-rescue-database.firebaseapp.com",
+      projectId: "go-rescue-database",
+      storageBucket: "go-rescue-database.firebasestorage.app",
+      messagingSenderId: "389741892505",
+      appId: "1:389741892505:web:1f92bbe55da184f5aff908",
+      measurementId: "G-KESJ6TZM1P"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Debugging function (remove in production)
+    async function createTestUser() {
+      try {
+        const email = "testadmin@example.com";
+        const password = "Test1234";
+        const role = "admin";
+        
+        // Create auth user
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        
+        // Add to Firestore
+        await setDoc(doc(db, "mdrrmo-users", userCredential.user.uid), {
+          email: email,
+          name: "Test Admin",
+          role: role,
+          createdAt: new Date().toISOString()
+        });
+        
+        console.log("Test user created successfully!");
+        console.log(`Email: ${email} | Password: ${password} | Role: ${role}`);
+      } catch (error) {
+        console.error("Error creating test user:", error);
       }
     }
+
+    // Run this in console if needed during development
+    window.createTestUser = createTestUser;
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const rememberMe = document.getElementById('remember').checked;
+    const errorDisplay = document.getElementById('errorDisplay');
+    const loginBtn = document.getElementById('loginBtn');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+
+    // Reset UI
+    errorDisplay.textContent = '';
+    errorDisplay.style.display = 'none';
+    loginBtn.disabled = true;
+    loadingIndicator.style.display = 'block';
+
+  try {
+    // Validate input
+    if (!email || !password) {
+      throw new Error('Please fill in all fields');
+    }
+      // Sign in
+    await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Fetch user role from Firestore
+    const usersRef = collection(db, 'mdrrmo-users');
+    const q = query(usersRef, where("email", "==", email));
+    const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        await auth.signOut();
+        throw new Error('User not authorized. Contact support.');
+      }
+
+      // Redirect based on role
+      const userData = querySnapshot.docs[0].data();
+      if (!userData.role) {
+        await auth.signOut();
+        throw new Error('No role assigned to this user.');
+      }
+
+      // Redirect to the correct dashboard
+      window.location.href = `${userData.role}-dashboard.html`;
+
+    } catch (error) {
+      console.error('Login error:', error);
+      errorDisplay.textContent = error.message || 'Login failed. Try again.';
+      errorDisplay.style.display = 'block';
+    } finally {
+      loginBtn.disabled = false;
+      loadingIndicator.style.display = 'none';
+    }
+  });
   </script>
 </body>
 </html>
