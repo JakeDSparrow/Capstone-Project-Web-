@@ -185,12 +185,12 @@
     </div>
   </div>
 
-<script type="module">
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import { 
       getAuth, 
       signInWithEmailAndPassword,
-      createUserWithEmailAndPassword, // Added for debugging
+      createUserWithEmailAndPassword,
       setPersistence, 
       browserSessionPersistence, 
       browserLocalPersistence 
@@ -202,7 +202,8 @@
       where,
       getDocs,
       setDoc,
-      doc
+      doc,
+      getDoc
     } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -219,6 +220,20 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+
+    // Predefined admin credentials (for initial setup only)
+    const predefinedAdmins = {
+      "admin1@example.com": {
+        password: "Admin1@1234",
+        name: "Primary Admin",
+        redirect: "admin-dashboard.html"
+      },
+      "admin2@example.com": {
+        password: "Admin2@5678",
+        name: "Secondary Admin",
+        redirect: "admin-dashboard.html"
+      }
+    };
 
     // Debugging function (remove in production)
     async function createTestUser() {
@@ -247,58 +262,82 @@
 
     // Run this in console if needed during development
     window.createTestUser = createTestUser;
-  document.getElementById('loginBtn').addEventListener('click', async () => {
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value.trim();
-    const rememberMe = document.getElementById('remember').checked;
-    const errorDisplay = document.getElementById('errorDisplay');
-    const loginBtn = document.getElementById('loginBtn');
-    const loadingIndicator = document.getElementById('loadingIndicator');
 
-    // Reset UI
-    errorDisplay.textContent = '';
-    errorDisplay.style.display = 'none';
-    loginBtn.disabled = true;
-    loadingIndicator.style.display = 'block';
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const rememberMe = document.getElementById('remember').checked;
+      const errorDisplay = document.getElementById('errorDisplay');
+      const loginBtn = document.getElementById('loginBtn');
+      const loadingIndicator = document.getElementById('loadingIndicator');
 
-  try {
-    // Validate input
-    if (!email || !password) {
-      throw new Error('Please fill in all fields');
-    }
-      // Sign in
-    await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      
-      // Fetch user role from Firestore
-    const usersRef = collection(db, 'mdrrmo-users');
-    const q = query(usersRef, where("email", "==", email));
-    const querySnapshot = await getDocs(q);
+      // Reset UI
+      errorDisplay.textContent = '';
+      errorDisplay.style.display = 'none';
+      loginBtn.disabled = true;
+      loadingIndicator.style.display = 'block';
 
-      if (querySnapshot.empty) {
-        await auth.signOut();
-        throw new Error('User not authorized. Contact support.');
+      try {
+        // Validate input
+        if (!email || !password) {
+          throw new Error('Please fill in all fields');
+        }
+
+        // Check if predefined admin
+        if (predefinedAdmins[email]) {
+          if (password !== predefinedAdmins[email].password) {
+            throw new Error('Incorrect password for admin account');
+          }
+          // Redirect predefined admin
+          window.location.href = predefinedAdmins[email].redirect;
+          return;
+        }
+
+        // Regular user login flow
+        await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        
+        // Get user document directly by UID (more secure than querying by email)
+        const userDoc = await getDoc(doc(db, "mdrrmo-users", userCredential.user.uid));
+        
+        if (!userDoc.exists()) {
+          await auth.signOut();
+          throw new Error('User not authorized. Contact support.');
+        }
+
+        const userData = userDoc.data();
+        if (!userData.role) {
+          await auth.signOut();
+          throw new Error('No role assigned to this user.');
+        }
+
+        // Redirect based on role
+        window.location.href = `${userData.role}-dashboard.html`;
+
+      } catch (error) {
+        console.error('Login error:', error);
+        errorDisplay.textContent = getFriendlyErrorMessage(error);
+        errorDisplay.style.display = 'block';
+      } finally {
+        loginBtn.disabled = false;
+        loadingIndicator.style.display = 'none';
       }
+    });
 
-      // Redirect based on role
-      const userData = querySnapshot.docs[0].data();
-      if (!userData.role) {
-        await auth.signOut();
-        throw new Error('No role assigned to this user.');
+    function getFriendlyErrorMessage(error) {
+      switch (error.code) {
+        case 'auth/user-not-found':
+          return 'Email not found';
+        case 'auth/wrong-password':
+          return 'Incorrect password';
+        case 'auth/too-many-requests':
+          return 'Too many attempts. Try again later.';
+        case 'permission-denied':
+          return 'You do not have permission to access this resource';
+        default:
+          return error.message || 'Login failed. Please try again.';
       }
-
-      // Redirect to the correct dashboard
-      window.location.href = `${userData.role}-dashboard.html`;
-
-    } catch (error) {
-      console.error('Login error:', error);
-      errorDisplay.textContent = error.message || 'Login failed. Try again.';
-      errorDisplay.style.display = 'block';
-    } finally {
-      loginBtn.disabled = false;
-      loadingIndicator.style.display = 'none';
     }
-  });
   </script>
 </body>
 </html>
