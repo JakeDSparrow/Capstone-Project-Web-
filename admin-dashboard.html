@@ -515,27 +515,27 @@
   <!-- Sidebar -->
   <div class="sidebar">
     <div class="sidebar-menu">
-      <a href="#" class="menu-item active">
+      <a href="#" class="menu-item active" data-view="dashboard-view">
         <i class="fas fa-chart-line"></i>
         <span>Dashboard</span>
       </a>
-      <a href="#" class="menu-item">
+      <a href="#" class="menu-item" data-view="calendar-view">
         <i class="fas fa-calendar-alt"></i>
         <span>Calendar</span>
       </a>
-      <a href="#" class="menu-item">
+      <a href="#" class="menu-item" data-view="announcements-view">
         <i class="fas fa-bullhorn"></i>
         <span>Announcements</span>
       </a>
-      <a href="#" class="menu-item">
+      <a href="#" class="menu-item" data-view="requests-view">
         <i class="fas fa-envelope"></i>
         <span>Requests</span>
       </a>
-      <a href="#" class="menu-item">
+      <a href="#" class="menu-item" data-view="users-view">
         <i class="fas fa-users-cog"></i>
         <span>User Management</span>
       </a>
-      <a href="#" class="menu-item">
+      <a href="#" class="menu-item" data-view="settings-view">
         <i class="fas fa-cog"></i>
         <span>Settings</span>
       </a>
@@ -545,108 +545,355 @@
   <!-- Main Content -->
   <div class="main-content">
     <!-- Dashboard View -->
-    <div class="dashboard-header">
-      <h1>Dashboard Overview</h1>
-      <div class="actions">
-        <button class="btn btn-outline">
-          <i class="fas fa-download"></i> Export
-        </button>
-      </div>
-    </div>
-    
-    <!-- Stats Cards -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">
-          <i class="fas fa-users"></i> Total Users
+    <div class="view-container active" id="dashboard-view">
+      <div class="dashboard-header">
+        <h1>Dashboard Overview</h1>
+        <div class="actions">
+          <button class="btn btn-outline">
+            <i class="fas fa-download"></i> Export
+          </button>
         </div>
-        <div class="stat-value">1,248</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">
-          <i class="fas fa-ambulance"></i> Active Responders
-        </div>
-        <div class="stat-value">86</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">
-          <i class="fas fa-clock"></i> Pending Requests
-        </div>
-        <div class="stat-value">24</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">
-          <i class="fas fa-check-circle"></i> Resolved Today
-        </div>
-        <div class="stat-value">18</div>
-      </div>
-    </div>
-    
-    <!-- Calendar Card -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Upcoming Events</div>
-        <button class="btn btn-primary">
-          <i class="fas fa-plus"></i> Add Event
-        </button>
-      </div>
-      <div class="calendar">
-        <div class="calendar-header">
-          <div class="calendar-title">July 2023</div>
-          <div class="calendar-nav">
-            <button class="calendar-nav-btn">
-              <i class="fas fa-chevron-left"></i>
-            </button>
-            <button class="calendar-nav-btn">
-              <i class="fas fa-chevron-right"></i>
-            </button>
+      
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">
+            <i class="fas fa-users"></i> Total Users
           </div>
+          <div class="stat-value">1,248</div>
         </div>
-        
-        <div class="calendar-grid">
-          <div class="calendar-day-header">Sun</div>
-          <div class="calendar-day-header">Mon</div>
-          <div class="calendar-day-header">Tue</div>
-          <div class="calendar-day-header">Wed</div>
-          <div class="calendar-day-header">Thu</div>
-          <div class="calendar-day-header">Fri</div>
-          <div class="calendar-day-header">Sat</div>
+        <div class="stat-card">
+          <div class="stat-label">
+            <i class="fas fa-ambulance"></i> Active Responders
+          </div>
+          <div class="stat-value">86</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">
+            <i class="fas fa-clock"></i> Pending Requests
+          </div>
+          <div class="stat-value">24</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">
+            <i class="fas fa-check-circle"></i> Resolved Today
+          </div>
+          <div class="stat-value">18</div>
+        </div>
+      </div>
+      
+      <!-- Calendar Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Upcoming Events</div>
+          <button class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Event
+          </button>
+        </div>
+        <div class="calendar">
+          <div class="calendar-header">
+            <div class="calendar-title">July 2023</div>
+            <div class="calendar-nav">
+              <button class="calendar-nav-btn">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <button class="calendar-nav-btn">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
           
-          <!-- Calendar days would be dynamically generated -->
-          <div class="calendar-day other-month">
-            <div class="calendar-day-number">25</div>
+          <div class="calendar-grid">
+            <div class="calendar-day-header">Sun</div>
+            <div class="calendar-day-header">Mon</div>
+            <div class="calendar-day-header">Tue</div>
+            <div class="calendar-day-header">Wed</div>
+            <div class="calendar-day-header">Thu</div>
+            <div class="calendar-day-header">Fri</div>
+            <div class="calendar-day-header">Sat</div>
+            
+            <!-- Calendar days would be dynamically generated -->
+            <div class="calendar-day other-month">
+              <div class="calendar-day-number">25</div>
+            </div>
+            <div class="calendar-day other-month">
+              <div class="calendar-day-number">26</div>
+            </div>
+            <div class="calendar-day other-month">
+              <div class="calendar-day-number">27</div>
+            </div>
+            <div class="calendar-day">
+              <div class="calendar-day-number">1</div>
+            </div>
+            <div class="calendar-day">
+              <div class="calendar-day-number">2</div>
+            </div>
+            <div class="calendar-day today">
+              <div class="calendar-day-number">3</div>
+            </div>
+            <!-- More days... -->
           </div>
-          <div class="calendar-day other-month">
-            <div class="calendar-day-number">26</div>
+        </div>
+      </div>
+      
+      <!-- Recent Activity Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Recent Activity</div>
+        </div>
+        <div class="activity-list">
+          <div class="activity-item">
+            <div class="activity-time">10:30 AM</div>
+            <div class="activity-content">New responder registered - John Doe</div>
           </div>
-          <div class="calendar-day other-month">
-            <div class="calendar-day-number">27</div>
-          </div>
-          <div class="calendar-day">
-            <div class="calendar-day-number">1</div>
-          </div>
-          <div class="calendar-day">
-            <div class="calendar-day-number">2</div>
-          </div>
-          <div class="calendar-day today">
-            <div class="calendar-day-number">3</div>
-          </div>
-          <!-- More days... -->
+          <!-- More activity items... -->
         </div>
       </div>
     </div>
-    
-    <!-- Recent Activity Card -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Recent Activity</div>
-      </div>
-      <div class="activity-list">
-        <div class="activity-item">
-          <div class="activity-time">10:30 AM</div>
-          <div class="activity-content">New responder registered - John Doe</div>
+
+    <!-- Calendar View -->
+    <div class="view-container" id="calendar-view">
+      <div class="dashboard-header">
+        <h1>Calendar</h1>
+        <div class="actions">
+          <button class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Event
+          </button>
         </div>
-        <!-- More activity items... -->
+      </div>
+      <div class="card">
+        <div class="calendar">
+          <div class="calendar-header">
+            <div class="calendar-title">July 2023</div>
+            <div class="calendar-nav">
+              <button class="calendar-nav-btn">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <button class="calendar-nav-btn">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+          <div class="calendar-grid">
+            <div class="calendar-day-header">Sun</div>
+            <div class="calendar-day-header">Mon</div>
+            <div class="calendar-day-header">Tue</div>
+            <div class="calendar-day-header">Wed</div>
+            <div class="calendar-day-header">Thu</div>
+            <div class="calendar-day-header">Fri</div>
+            <div class="calendar-day-header">Sat</div>
+            
+            <!-- Calendar days would be dynamically generated -->
+            <div class="calendar-day other-month">
+              <div class="calendar-day-number">25</div>
+            </div>
+            <div class="calendar-day other-month">
+              <div class="calendar-day-number">26</div>
+            </div>
+            <div class="calendar-day other-month">
+              <div class="calendar-day-number">27</div>
+            </div>
+            <div class="calendar-day">
+              <div class="calendar-day-number">1</div>
+            </div>
+            <div class="calendar-day">
+              <div class="calendar-day-number">2</div>
+            </div>
+            <div class="calendar-day today">
+              <div class="calendar-day-number">3</div>
+            </div>
+            <!-- More days... -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Announcements View -->
+    <div class="view-container" id="announcements-view">
+      <div class="dashboard-header">
+        <h1>Announcements</h1>
+        <div class="actions">
+          <button class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Announcement
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Recent Announcements</div>
+        </div>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>System Maintenance</td>
+                <td>Jul 3, 2023</td>
+                <td><span class="status-badge status-active">Active</span></td>
+                <td>
+                  <button class="btn btn-outline">Edit</button>
+                </td>
+              </tr>
+              <tr>
+                <td>New Feature Release</td>
+                <td>Jun 28, 2023</td>
+                <td><span class="status-badge status-active">Active</span></td>
+                <td>
+                  <button class="btn btn-outline">Edit</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Requests View -->
+    <div class="view-container" id="requests-view">
+      <div class="dashboard-header">
+        <h1>Service Requests</h1>
+        <div class="actions">
+          <button class="btn btn-outline">
+            <i class="fas fa-filter"></i> Filter
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Recent Requests</div>
+        </div>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>#REQ-1024</td>
+                <td>Medical Emergency</td>
+                <td>Downtown Area</td>
+                <td><span class="status-badge status-active">In Progress</span></td>
+                <td>
+                  <button class="btn btn-outline">View</button>
+                </td>
+              </tr>
+              <tr>
+                <td>#REQ-1023</td>
+                <td>Fire Response</td>
+                <td>Industrial Zone</td>
+                <td><span class="status-badge status-active">Dispatched</span></td>
+                <td>
+                  <button class="btn btn-outline">View</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Management View -->
+    <div class="view-container" id="users-view">
+      <div class="dashboard-header">
+        <h1>User Management</h1>
+        <div class="actions">
+          <button class="btn btn-primary" id="add-user-btn">
+            <i class="fas fa-plus"></i> Add User
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">All Users</div>
+        </div>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Admin User</td>
+                <td>admin@gorescue.com</td>
+                <td>Admin</td>
+                <td><span class="status-badge status-active">Active</span></td>
+                <td>
+                  <button class="btn btn-outline">Edit</button>
+                </td>
+              </tr>
+              <tr>
+                <td>Dispatcher 1</td>
+                <td>dispatcher@gorescue.com</td>
+                <td>Dispatcher</td>
+                <td><span class="status-badge status-active">Active</span></td>
+                <td>
+                  <button class="btn btn-outline">Edit</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings View -->
+    <div class="view-container" id="settings-view">
+      <div class="dashboard-header">
+        <h1>Settings</h1>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">System Settings</div>
+        </div>
+        <div class="card-body">
+          <form>
+            <div class="form-group">
+              <label class="form-label">System Name</label>
+              <input type="text" class="form-control" value="GoRescue">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Timezone</label>
+              <select class="form-control">
+                <option>(UTC-05:00) Eastern Time</option>
+                <option>(UTC-06:00) Central Time</option>
+                <option>(UTC-07:00) Mountain Time</option>
+                <option>(UTC-08:00) Pacific Time</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Default Language</label>
+              <select class="form-control">
+                <option>English</option>
+                <option>Spanish</option>
+                <option>French</option>
+              </select>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-outline">Cancel</button>
+              <button type="button" class="btn btn-primary">Save Settings</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </div>
@@ -695,5 +942,120 @@
       </div>
     </div>
   </div>
+
+   <script>
+      // Toggle sidebar on mobile
+      document.querySelector('.menu-toggle').addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.toggle('active');
+      });
+
+      // Navigation functionality
+      document.querySelectorAll('.menu-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          // Remove active class from all menu items
+          document.querySelectorAll('.menu-item').forEach(i => {
+            i.classList.remove('active');
+          });
+          
+          // Add active class to clicked item
+          this.classList.add('active');
+          
+          // Hide all views
+          document.querySelectorAll('.view-container').forEach(view => {
+            view.classList.remove('active');
+          });
+          
+          // Show the selected view
+          const viewId = this.getAttribute('data-view');
+          document.getElementById(viewId).classList.add('active');
+        });
+      });
+
+      // Modal functionality
+      const modal = document.querySelector('.modal');
+      const addUserBtn = document.getElementById('add-user-btn');
+      const modalClose = document.querySelector('.modal-close');
+
+      if (addUserBtn) {
+        addUserBtn.addEventListener('click', () => {
+          modal.classList.add('active');
+        });
+      }
+
+      modalClose.addEventListener('click', () => {
+        modal.classList.remove('active');
+      });
+
+      // Close modal when clicking outside
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+        }
+      });
+  </script>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDCNCYf0jP38sMHx1Oh8sYv_kKNdbVT84s",
+      authDomain: "go-rescue-database.firebaseapp.com",
+      projectId: "go-rescue-database",
+      storageBucket: "go-rescue-database.firebasestorage.app",
+      messagingSenderId: "389741892505",
+      appId: "1:389741892505:web:1f92bbe55da184f5aff908",
+      measurementId: "G-KESJ6TZM1P"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore();
+
+    // Add User Save Logic
+    document.querySelector(".modal .btn-primary").addEventListener("click", async (e) => {
+      e.preventDefault();
+      
+      const name = document.querySelector(".modal input[type='text']").value;
+      const email = document.querySelector(".modal input[type='email']").value;
+      const role = document.querySelectorAll(".modal select")[0].value.toLowerCase();
+      const status = document.querySelectorAll(".modal select")[1].value.toLowerCase();
+
+      const password = prompt("Enter a temporary password for this user:");
+      if (!email || !password || !name || role === "select role") return alert("Please fill in all fields.");
+
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        const uid = cred.user.uid;
+
+        await setDoc(doc(db, "users", uid), {
+          name,
+          email,
+          role,
+          status,
+          createdAt: serverTimestamp(),
+        });
+
+        alert("User created successfully!");
+        modal.classList.remove('active');
+      } catch (err) {
+        console.error(err);
+        alert("Error: " + err.message);
+      }
+    });
+  </script>
+
 </body>
 </html>

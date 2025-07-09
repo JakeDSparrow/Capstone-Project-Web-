@@ -185,159 +185,92 @@
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { 
-      getAuth, 
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      setPersistence, 
-      browserSessionPersistence, 
-      browserLocalPersistence 
-    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-    import { 
-      getFirestore,
-      collection,
-      query,
-      where,
-      getDocs,
-      setDoc,
-      doc,
-      getDoc
-    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    setPersistence,
+    browserLocalPersistence,
+    browserSessionPersistence
+  } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc
+  } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDCNCYf0jP38sMHx1Oh8sYv_kKNdbVT84s",
-      authDomain: "go-rescue-database.firebaseapp.com",
-      projectId: "go-rescue-database",
-      storageBucket: "go-rescue-database.firebasestorage.app",
-      messagingSenderId: "389741892505",
-      appId: "1:389741892505:web:1f92bbe55da184f5aff908",
-      measurementId: "G-KESJ6TZM1P"
-    };
+  // 🔧 Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDCNCYf0jP38sMHx1Oh8sYv_kKNdbVT84s",
+    authDomain: "go-rescue-database.firebaseapp.com",
+    projectId: "go-rescue-database",
+    storageBucket: "go-rescue-database.firebasestorage.app",
+    messagingSenderId: "389741892505",
+    appId: "1:389741892505:web:1f92bbe55da184f5aff908"
+  };
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  // 🔧 Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-    // Predefined admin credentials (for initial setup only)
-    const predefinedAdmins = {
-      "admin1@example.com": {
-        password: "Admin1@1234",
-        name: "Primary Admin",
-        redirect: "admin-dashboard.html"
-      },
-      "admin2@example.com": {
-        password: "Admin2@5678",
-        name: "Secondary Admin",
-        redirect: "admin-dashboard.html"
+  // 🧠 Utility to show error
+  function showError(message) {
+    const errorDisplay = document.getElementById('errorDisplay');
+    errorDisplay.textContent = message;
+    errorDisplay.style.display = 'block';
+  }
+
+  // 🎯 Main login handler
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const remember = document.getElementById('remember').checked;
+    const loginBtn = document.getElementById('loginBtn');
+    const loading = document.getElementById('loadingIndicator');
+    const errorDisplay = document.getElementById('errorDisplay');
+
+    errorDisplay.style.display = 'none';
+    loading.style.display = 'block';
+    loginBtn.disabled = true;
+
+    try {
+      if (!email || !password) throw new Error("Please enter both email and password");
+
+      await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const uid = userCredential.user.uid;
+
+      // 👁️ Check Firestore for user's role
+      const userDocRef = doc(db, "mdrrmo-users", uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (!userDoc.exists()) {
+        await auth.signOut();
+        throw new Error("Account not authorized. Contact admin.");
       }
-    };
 
-    // Debugging function (remove in production)
-    async function createTestUser() {
-      try {
-        const email = "testadmin@example.com";
-        const password = "Test1234";
-        const role = "admin";
-        
-        // Create auth user
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        
-        // Add to Firestore
-        await setDoc(doc(db, "mdrrmo-users", userCredential.user.uid), {
-          email: email,
-          name: "Test Admin",
-          role: role,
-          createdAt: new Date().toISOString()
-        });
-        
-        console.log("Test user created successfully!");
-        console.log(`Email: ${email} | Password: ${password} | Role: ${role}`);
-      } catch (error) {
-        console.error("Error creating test user:", error);
+      const role = userDoc.data().role?.toLowerCase();
+
+      if (role === "admin") {
+        window.location.href = "admin-dashboard.html";
+      } else if (role === "dispatcher") {
+        window.location.href = "dispatcher-dashboard.html";
+      } else {
+        await auth.signOut();
+        throw new Error("Your account does not have access to this portal.");
       }
+
+    } catch (error) {
+      console.error("Login error:", error);
+      showError(error.message || "Something went wrong.");
+    } finally {
+      loginBtn.disabled = false;
+      loading.style.display = 'none';
     }
+  });
+</script>
 
-    // Run this in console if needed during development
-    window.createTestUser = createTestUser;
-
-    document.getElementById('loginBtn').addEventListener('click', async () => {
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value.trim();
-      const rememberMe = document.getElementById('remember').checked;
-      const errorDisplay = document.getElementById('errorDisplay');
-      const loginBtn = document.getElementById('loginBtn');
-      const loadingIndicator = document.getElementById('loadingIndicator');
-
-      // Reset UI
-      errorDisplay.textContent = '';
-      errorDisplay.style.display = 'none';
-      loginBtn.disabled = true;
-      loadingIndicator.style.display = 'block';
-
-      try {
-        // Validate input
-        if (!email || !password) {
-          throw new Error('Please fill in all fields');
-        }
-
-        // Check if predefined admin
-        if (predefinedAdmins[email]) {
-          if (password !== predefinedAdmins[email].password) {
-            throw new Error('Incorrect password for admin account');
-          }
-          // Redirect predefined admin
-          window.location.href = predefinedAdmins[email].redirect;
-          return;
-        }
-
-        // Regular user login flow
-        await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        
-        // Get user document directly by UID (more secure than querying by email)
-        const userDoc = await getDoc(doc(db, "mdrrmo-users", userCredential.user.uid));
-        
-        if (!userDoc.exists()) {
-          await auth.signOut();
-          throw new Error('User not authorized. Contact support.');
-        }
-
-        const userData = userDoc.data();
-        if (!userData.role) {
-          await auth.signOut();
-          throw new Error('No role assigned to this user.');
-        }
-
-        // Redirect based on role
-        window.location.href = `${userData.role}-dashboard.html`;
-
-      } catch (error) {
-        console.error('Login error:', error);
-        errorDisplay.textContent = getFriendlyErrorMessage(error);
-        errorDisplay.style.display = 'block';
-      } finally {
-        loginBtn.disabled = false;
-        loadingIndicator.style.display = 'none';
-      }
-    });
-
-    function getFriendlyErrorMessage(error) {
-      switch (error.code) {
-        case 'auth/user-not-found':
-          return 'Email not found';
-        case 'auth/wrong-password':
-          return 'Incorrect password';
-        case 'auth/too-many-requests':
-          return 'Too many attempts. Try again later.';
-        case 'permission-denied':
-          return 'You do not have permission to access this resource';
-        default:
-          return error.message || 'Login failed. Please try again.';
-      }
-    }
-  </script>
 </body>
 </html>
